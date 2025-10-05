@@ -6,19 +6,20 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, setActiveTab }: NavigationProps) => {
-  const tabs = ["Dashboard", "Tab 1", "Tab 2", "Tab 3"];
+  const tabs = ["Marketplace", "Dashboard"];
 
   return (
     <nav className="bg-terminal-surface px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className="flex items-center space-x-4 cursor-pointer" onClick={() => setActiveTab("Dashboard")}>
-            <img src="/oplogo.png" alt="ctrl Logo" className="w-8 h-8" />
-            <div className="text-2xl font-normal text-white font-sans">
-              ctrl
+          <div className="flex items-center space-x-4 cursor-pointer" onClick={() => setActiveTab("Marketplace")}>
+            <div className="w-12 h-12 bg-terminal-bg border-2 border-terminal-accent rounded-lg relative shadow-lg hover:bg-terminal-accent group transition-all">
+              <span className="absolute bottom-1 right-1.5 text-[10px] font-bold text-terminal-accent group-hover:text-terminal-bg transition-colors">
+                ctrl
+              </span>
             </div>
           </div>
-          <div className="flex items-center space-x-5 ml-24">
+          <div className="flex items-center space-x-5 ml-8">
             {tabs.map((tab) => (
               <Button
                 key={tab}

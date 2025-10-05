@@ -1,21 +1,34 @@
 import { useEffect, useState } from "react";
+import { getGPUPricing, getGPUPricingSync, GPUPricing } from '../lib/gpuPricing';
 
 const TickerTape = () => {
-  const messages = [
-    "CTRL | SYSTEM READY",
-    "STATUS: OPERATIONAL",
-    "ALL SYSTEMS NOMINAL"
-  ];
+  const [gpuPrices, setGpuPrices] = useState<GPUPricing[]>(getGPUPricingSync());
 
-  const [currentMessage, setCurrentMessage] = useState(0);
-
+  // Fetch real prices on mount and every 60 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMessage((prev) => (prev + 1) % messages.length);
-    }, 6000);
+    const fetchPrices = async () => {
+      const prices = await getGPUPricing();
+      setGpuPrices(prices);
+    };
 
-    return () => clearInterval(interval);
-  }, [messages.length]);
+    fetchPrices(); // Initial fetch
+
+    const priceInterval = setInterval(fetchPrices, 60000); // Update every minute
+
+    return () => clearInterval(priceInterval);
+  }, []);
+
+  // Create continuous ticker message with all GPU prices
+  const createTickerMessage = () => {
+    return gpuPrices.map(gpu => {
+      const demandIndicator = gpu.demand === 'High' ? '🔥' : gpu.demand === 'Medium' ? '📊' : '📉';
+      return `${gpu.gpuType}: $${gpu.pricePerHour.toFixed(2)}/hr ${demandIndicator}`;
+    }).join('  •  ');
+  };
+
+  const tickerMessage = createTickerMessage();
+  // Duplicate the message to create seamless loop
+  const continuousMessage = `${tickerMessage}  •  ${tickerMessage}  •  ${tickerMessage}`;
 
   return (
     <div className="bg-terminal-bg border-b border-terminal-border overflow-hidden h-10">
@@ -25,7 +38,7 @@ const TickerTape = () => {
         </div>
         <div className="flex-1 relative overflow-hidden">
           <div className="animate-scroll-text whitespace-nowrap text-terminal-accent text-sm font-mono">
-            {messages[currentMessage]}
+            {continuousMessage}
           </div>
         </div>
       </div>

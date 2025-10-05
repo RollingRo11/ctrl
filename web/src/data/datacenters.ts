@@ -1,0 +1,272 @@
+import { DatacenterProject } from '../types/datacenter';
+
+export const datacenterProjects: DatacenterProject[] = [
+  {
+    id: '1',
+    name: 'Phoenix AI Cluster',
+    location: 'Phoenix, AZ',
+    totalGPUs: 2048,
+    gpuAllocations: [
+      { type: 'NVIDIA H100', count: 1536, specs: '80GB HBM3' },
+      { type: 'NVIDIA A100', count: 512, specs: '80GB HBM2e' }
+    ],
+    fundingGoal: 50000000,
+    fundingCurrent: 50000000,
+    fundingPercentage: 100,
+    expectedAPY: 18.5,
+    minInvestment: 1000,
+    projectType: 'GPU Farm',
+    status: 'Funded',
+    buildStatus: 'Built',
+    powerCapacity: '25 MW',
+    startDate: '2025-11',
+    description: 'Large-scale H100 cluster focused on AI training and inference workloads. Located in low-cost energy zone with direct fiber connectivity.',
+    coordinates: '33.4484° N, 112.0740° W',
+    operatorName: 'Phoenix Compute LLC',
+    networkCapacity: '400 Gbps',
+    coolingType: 'Liquid Cooling',
+    uptime: '99.95%'
+  },
+  {
+    id: '2',
+    name: 'Iceland Compute Hub',
+    location: 'Reykjavik, Iceland',
+    totalGPUs: 1536,
+    gpuAllocations: [
+      { type: 'NVIDIA A100', count: 1024, specs: '80GB HBM2e' },
+      { type: 'NVIDIA A100', count: 512, specs: '40GB HBM2' }
+    ],
+    fundingGoal: 35000000,
+    fundingCurrent: 35000000,
+    fundingPercentage: 100,
+    expectedAPY: 16.2,
+    minInvestment: 500,
+    projectType: 'Datacenter',
+    status: 'Funded',
+    buildStatus: 'Built',
+    powerCapacity: '18 MW',
+    startDate: '2025-10',
+    description: 'Renewable energy powered datacenter utilizing geothermal cooling. Premium uptime guarantees with European market access.',
+    coordinates: '64.1466° N, 21.9426° W',
+    operatorName: 'Nordic Data Systems',
+    networkCapacity: '200 Gbps',
+    coolingType: 'Geothermal',
+    uptime: '99.99%'
+  },
+  {
+    id: '3',
+    name: 'Texas GPU Ranch',
+    location: 'Austin, TX',
+    totalGPUs: 4096,
+    gpuAllocations: [
+      { type: 'NVIDIA H200', count: 3072, specs: '141GB HBM3e' },
+      { type: 'NVIDIA H100', count: 1024, specs: '80GB HBM3' }
+    ],
+    fundingGoal: 85000000,
+    fundingCurrent: 12750000,
+    fundingPercentage: 15,
+    expectedAPY: 22.0,
+    minInvestment: 2500,
+    projectType: 'GPU Farm',
+    status: 'Active',
+    buildStatus: 'Raising',
+    buildProgress: 15,
+    powerCapacity: '40 MW',
+    startDate: '2026-01',
+    description: 'Next-gen H200 deployment targeting frontier model training. Strategic location with access to cheap renewable energy and major tech hubs.',
+    coordinates: '30.2672° N, 97.7431° W',
+    operatorName: 'Lone Star AI',
+    networkCapacity: '800 Gbps',
+    coolingType: 'Liquid + Air Hybrid',
+    uptime: '99.9%',
+    constructionUpdates: [
+      { date: '2025-10-01', update: 'Land acquisition completed. Environmental impact assessment approved.' },
+      { date: '2025-09-15', update: 'Power grid connection permits secured from Austin Energy.' },
+      { date: '2025-08-30', update: 'Initial site survey completed. Foundation work to begin Q4 2025.' }
+    ]
+  },
+  {
+    id: '4',
+    name: 'Singapore Edge Node',
+    location: 'Singapore',
+    totalGPUs: 512,
+    gpuAllocations: [
+      { type: 'NVIDIA L40S', count: 384, specs: '48GB GDDR6' },
+      { type: 'NVIDIA A100', count: 128, specs: '40GB HBM2' }
+    ],
+    fundingGoal: 15000000,
+    fundingCurrent: 15000000,
+    fundingPercentage: 100,
+    expectedAPY: 14.5,
+    minInvestment: 500,
+    projectType: 'Datacenter',
+    status: 'Funded',
+    buildStatus: 'Built',
+    powerCapacity: '8 MW',
+    startDate: '2025-09',
+    description: 'Low-latency edge computing facility serving APAC region. Optimized for inference workloads and real-time AI applications.',
+    coordinates: '1.3521° N, 103.8198° E',
+    operatorName: 'APAC Edge Computing',
+    networkCapacity: '100 Gbps',
+    coolingType: 'Precision Air Cooling',
+    uptime: '99.98%'
+  },
+  {
+    id: '5',
+    name: 'Montana Mining Repurpose',
+    location: 'Butte, MT',
+    totalGPUs: 3072,
+    gpuAllocations: [
+      { type: 'NVIDIA A100', count: 2048, specs: '80GB HBM2e' },
+      { type: 'NVIDIA V100', count: 1024, specs: '32GB HBM2' }
+    ],
+    fundingGoal: 42000000,
+    fundingCurrent: 0,
+    fundingPercentage: 0,
+    expectedAPY: 19.8,
+    minInvestment: 1000,
+    projectType: 'GPU Farm',
+    status: 'Coming Soon',
+    buildStatus: 'Raising',
+    buildProgress: 0,
+    powerCapacity: '30 MW',
+    startDate: '2026-03',
+    description: 'Converted mining facility with existing power infrastructure. Cold climate provides natural cooling advantages.',
+    coordinates: '46.0038° N, 112.5348° W',
+    operatorName: 'Mountain Compute Co.',
+    networkCapacity: '200 Gbps',
+    coolingType: 'Natural + Air Cooling',
+    uptime: '99.9%',
+    constructionUpdates: [
+      { date: '2025-09-20', update: 'Architectural plans finalized. Seeking regulatory approval.' }
+    ]
+  },
+  {
+    id: '6',
+    name: 'Dubai Sovereign Compute',
+    location: 'Dubai, UAE',
+    totalGPUs: 2560,
+    gpuAllocations: [
+      { type: 'NVIDIA H100', count: 1792, specs: '80GB HBM3' },
+      { type: 'NVIDIA A100', count: 512, specs: '80GB HBM2e' },
+      { type: 'NVIDIA L40S', count: 256, specs: '48GB GDDR6' }
+    ],
+    fundingGoal: 60000000,
+    fundingCurrent: 48000000,
+    fundingPercentage: 80,
+    expectedAPY: 20.5,
+    minInvestment: 5000,
+    projectType: 'Datacenter',
+    status: 'Active',
+    buildStatus: 'Raising',
+    buildProgress: 80,
+    powerCapacity: '32 MW',
+    startDate: '2025-12',
+    description: 'Government-backed datacenter with guaranteed enterprise contracts. Premium tier facility with highest security standards.',
+    coordinates: '25.2048° N, 55.2708° E',
+    operatorName: 'UAE National AI Infrastructure',
+    networkCapacity: '1 Tbps',
+    coolingType: 'Advanced Liquid Cooling',
+    uptime: '99.99%',
+    constructionUpdates: [
+      { date: '2025-10-03', update: 'Building shell 95% complete. HVAC systems being installed.' },
+      { date: '2025-09-20', update: 'First batch of H100 GPUs received and in secure storage.' },
+      { date: '2025-09-05', update: 'Power infrastructure testing completed successfully.' }
+    ]
+  },
+  {
+    id: '7',
+    name: 'Oregon Green Valley',
+    location: 'Prineville, OR',
+    totalGPUs: 1792,
+    gpuAllocations: [
+      { type: 'NVIDIA A100', count: 1280, specs: '80GB HBM2e' },
+      { type: 'NVIDIA A100', count: 512, specs: '40GB HBM2' }
+    ],
+    fundingGoal: 38000000,
+    fundingCurrent: 26600000,
+    fundingPercentage: 70,
+    expectedAPY: 15.8,
+    minInvestment: 750,
+    projectType: 'GPU Farm',
+    status: 'Active',
+    buildStatus: 'Raising',
+    buildProgress: 70,
+    powerCapacity: '22 MW',
+    startDate: '2025-11',
+    description: '100% renewable energy facility with hydroelectric power. Excellent fiber connectivity and proximity to West Coast clients.',
+    coordinates: '44.2982° N, 120.8342° W',
+    operatorName: 'Pacific Green Computing',
+    networkCapacity: '400 Gbps',
+    coolingType: 'Evaporative Cooling',
+    uptime: '99.95%',
+    constructionUpdates: [
+      { date: '2025-10-02', update: 'Data center construction 45% complete. Roof installation underway.' },
+      { date: '2025-09-18', update: 'Hydroelectric power connection established and tested.' },
+      { date: '2025-09-01', update: 'Foundation completed. Steel framework erected.' }
+    ]
+  },
+  {
+    id: '8',
+    name: 'Quebec Hyperscale',
+    location: 'Montreal, QC',
+    totalGPUs: 5120,
+    gpuAllocations: [
+      { type: 'NVIDIA B100', count: 4096, specs: 'Next-Gen Blackwell' },
+      { type: 'NVIDIA H200', count: 1024, specs: '141GB HBM3e' }
+    ],
+    fundingGoal: 120000000,
+    fundingCurrent: 0,
+    fundingPercentage: 0,
+    expectedAPY: 24.0,
+    minInvestment: 10000,
+    projectType: 'Datacenter',
+    status: 'Coming Soon',
+    buildStatus: 'Raising',
+    buildProgress: 0,
+    powerCapacity: '60 MW',
+    startDate: '2026-06',
+    description: 'Flagship facility deploying next-generation Blackwell architecture. Massive scale operation targeting foundation model providers.',
+    coordinates: '45.5017° N, 73.5673° W',
+    operatorName: 'Northern AI Consortium',
+    networkCapacity: '1.6 Tbps',
+    coolingType: 'Direct Liquid Cooling',
+    uptime: '99.99%',
+    constructionUpdates: [
+      { date: '2025-09-30', update: 'Partnership with Hydro-Québec finalized for dedicated power line.' }
+    ]
+  },
+  {
+    id: '9',
+    name: 'Stockholm Research Cluster',
+    location: 'Stockholm, Sweden',
+    totalGPUs: 896,
+    gpuAllocations: [
+      { type: 'NVIDIA H100', count: 512, specs: '80GB HBM3' },
+      { type: 'NVIDIA A100', count: 256, specs: '80GB HBM2e' },
+      { type: 'NVIDIA A100', count: 128, specs: '40GB HBM2' }
+    ],
+    fundingGoal: 22000000,
+    fundingCurrent: 19800000,
+    fundingPercentage: 90,
+    expectedAPY: 13.5,
+    minInvestment: 500,
+    projectType: 'GPU Farm',
+    status: 'Active',
+    buildStatus: 'Raising',
+    buildProgress: 90,
+    powerCapacity: '12 MW',
+    startDate: '2025-10',
+    description: 'Academic and research focused cluster with university partnerships. Carbon-neutral operations with Nordic renewable energy.',
+    coordinates: '59.3293° N, 18.0686° E',
+    operatorName: 'Stockholm Research Institute',
+    networkCapacity: '200 Gbps',
+    coolingType: 'District Cooling',
+    uptime: '99.98%',
+    constructionUpdates: [
+      { date: '2025-10-03', update: 'Final GPU delivery scheduled for Oct 15. Installation team ready.' },
+      { date: '2025-09-28', update: 'Network infrastructure completed. Speed tests exceeding targets.' },
+      { date: '2025-09-12', update: 'Cooling systems operational. Temperature tests successful.' }
+    ]
+  }
+];
