@@ -109,36 +109,73 @@ const ProjectDetails = ({ project, onClose }: ProjectDetailsProps) => {
             </Card>
           </div>
 
-          {/* GPU Allocation Section */}
-          <Card className="bg-terminal-surface border-terminal-border">
-            <CardHeader>
-              <CardTitle className="text-terminal-accent">GPU Configuration</CardTitle>
-              <p className="text-sm text-terminal-muted mt-1">
-                Total: {project.totalGPUs.toLocaleString()} GPUs across {project.gpuAllocations.length} types
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {project.gpuAllocations.map((gpu, index) => (
-                  <div
-                    key={index}
-                    className="bg-terminal-bg border border-terminal-border p-4 space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-terminal-accent font-semibold">{gpu.type}</span>
-                      <Badge variant="outline" className="border-terminal-border text-terminal-text">
-                        {gpu.count.toLocaleString()} units
-                      </Badge>
+          {/* GPU Allocation Section - Only for GPU Farm and Datacenter */}
+          {project.projectType !== 'Energy Grid' && (
+            <Card className="bg-terminal-surface border-terminal-border">
+              <CardHeader>
+                <CardTitle className="text-terminal-accent">GPU Configuration</CardTitle>
+                <p className="text-sm text-terminal-muted mt-1">
+                  Total: {project.totalGPUs.toLocaleString()} GPUs across {project.gpuAllocations.length} types
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {project.gpuAllocations.map((gpu, index) => (
+                    <div
+                      key={index}
+                      className="bg-terminal-bg border border-terminal-border p-4 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-terminal-accent font-semibold">{gpu.type}</span>
+                        <Badge variant="outline" className="border-terminal-border text-terminal-text">
+                          {gpu.count.toLocaleString()} units
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-terminal-muted">{gpu.specs}</div>
+                      <div className="text-xs text-terminal-muted">
+                        {((gpu.count / project.totalGPUs) * 100).toFixed(1)}% of total
+                      </div>
                     </div>
-                    <div className="text-sm text-terminal-muted">{gpu.specs}</div>
-                    <div className="text-xs text-terminal-muted">
-                      {((gpu.count / project.totalGPUs) * 100).toFixed(1)}% of total
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Energy Grid Details - Only for Energy Grid projects */}
+          {project.projectType === 'Energy Grid' && (
+            <Card className="bg-terminal-surface border-terminal-border">
+              <CardHeader>
+                <CardTitle className="text-terminal-accent">Energy Infrastructure</CardTitle>
+                <p className="text-sm text-terminal-muted mt-1">
+                  Clean energy generation and storage for AI datacenters
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-terminal-bg border border-terminal-border p-4 space-y-2">
+                    <div className="text-terminal-accent font-semibold">Energy Type</div>
+                    <div className="text-2xl text-white">
+                      {project.powerCapacity.includes('Solar') ? '☀️ Solar Power' :
+                       project.powerCapacity.includes('Wind') ? '💨 Wind Power' :
+                       project.powerCapacity.includes('Storage') ? '🔋 Battery Storage' :
+                       project.powerCapacity.includes('Hydro') ? '💧 Hydroelectric' : '⚡ Grid Infrastructure'}
+                    </div>
+                    <div className="text-sm text-terminal-muted">{project.powerCapacity}</div>
+                  </div>
+                  <div className="bg-terminal-bg border border-terminal-border p-4 space-y-2">
+                    <div className="text-terminal-accent font-semibold">Revenue Model</div>
+                    <div className="text-sm text-white space-y-1">
+                      <div>• Power Purchase Agreements (PPAs)</div>
+                      <div>• Renewable Energy Credits (RECs)</div>
+                      <div>• Grid stabilization services</div>
+                      <div>• Energy arbitrage opportunities</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Funding Section */}
           <Card className="bg-terminal-surface border-terminal-border">

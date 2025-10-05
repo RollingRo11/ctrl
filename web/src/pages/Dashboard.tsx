@@ -5,7 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis
 import { datacenterProjects } from '../data/datacenters';
 import InvestmentChatSidebar from '@/components/InvestmentChatSidebar';
 import LiveCashflow from '@/components/LiveCashflow';
-import ProjectUpdates from '@/components/ProjectUpdates';
+import DatacenterConstructionUpdates from '@/components/DatacenterConstructionUpdates';
 import { generateRevenueHistory } from '../data/revenueHistory';
 
 const Dashboard = () => {
@@ -477,7 +477,7 @@ const Dashboard = () => {
       {investments.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <LiveCashflow />
-          <ProjectUpdates />
+          <DatacenterConstructionUpdates />
         </div>
       )}
 

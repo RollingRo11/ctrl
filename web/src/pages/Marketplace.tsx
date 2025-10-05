@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import ProjectDetails from '@/components/ProjectDetails';
 
-type ProjectTypeFilter = 'All' | 'GPU Farm' | 'Datacenter';
+type ProjectTypeFilter = 'All' | 'GPU Farm' | 'Datacenter' | 'Energy Grid';
 type BuildStatusFilter = 'All' | 'Built' | 'Raising';
 
 const Marketplace = () => {
@@ -41,18 +41,18 @@ const Marketplace = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-start justify-between gap-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-normal text-white">GPU Datacenter Marketplace</h1>
+      <div className="flex items-center justify-between gap-8">
+        <div className="space-y-2 flex-shrink-0">
+          <h1 className="text-3xl font-normal text-white">Infrastructure Marketplace</h1>
           <p className="text-terminal-muted">Invest in the future of compute infrastructure</p>
         </div>
 
         {/* Filter Buttons - Right Side */}
-        <div className="space-y-3 flex-shrink-0">
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <span className="text-sm text-terminal-muted">Project Type:</span>
             <div className="flex gap-2">
-              {(['All', 'GPU Farm', 'Datacenter'] as ProjectTypeFilter[]).map((filterType) => (
+              {(['All', 'GPU Farm', 'Datacenter', 'Energy Grid'] as ProjectTypeFilter[]).map((filterType) => (
                 <Button
                   key={filterType}
                   onClick={() => setProjectTypeFilter(filterType)}
@@ -179,11 +179,26 @@ const Marketplace = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <div className="text-xs text-terminal-muted">Total GPUs</div>
-                  <div className="text-lg font-semibold text-terminal-accent">
-                    {project.totalGPUs.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-terminal-muted">{project.gpuAllocations.length} Types</div>
+                  {project.projectType === 'Energy Grid' ? (
+                    <>
+                      <div className="text-xs text-terminal-muted">Energy Type</div>
+                      <div className="text-lg font-semibold text-terminal-accent">
+                        {project.powerCapacity.includes('Solar') ? '☀️ Solar' :
+                         project.powerCapacity.includes('Wind') ? '💨 Wind' :
+                         project.powerCapacity.includes('Storage') ? '🔋 Battery' :
+                         project.powerCapacity.includes('Hydro') ? '💧 Hydro' : '⚡ Grid'}
+                      </div>
+                      <div className="text-xs text-terminal-muted">{project.powerCapacity}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xs text-terminal-muted">Total GPUs</div>
+                      <div className="text-lg font-semibold text-terminal-accent">
+                        {project.totalGPUs.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-terminal-muted">{project.gpuAllocations.length} Types</div>
+                    </>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs text-terminal-muted">Expected APY</div>

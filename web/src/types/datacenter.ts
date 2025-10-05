@@ -15,7 +15,7 @@ export interface DatacenterProject {
   fundingPercentage: number;
   expectedAPY: number;
   minInvestment: number;
-  projectType: 'GPU Farm' | 'Datacenter';
+  projectType: 'GPU Farm' | 'Datacenter' | 'Energy Grid';
   status: 'Active' | 'Coming Soon' | 'Funded';
   buildStatus: 'Raising' | 'Built';
   powerCapacity: string;

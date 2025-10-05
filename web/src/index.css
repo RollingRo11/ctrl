@@ -133,3 +133,17 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #059669;
 }
+
+/* Ticker tape scrolling animation */
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-text {
+  animation: scroll-text 30s linear infinite;
+}

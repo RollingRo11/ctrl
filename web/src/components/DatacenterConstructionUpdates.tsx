@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-const ProjectUpdates = () => {
+const DatacenterConstructionUpdates = () => {
   const { investments } = useInvestments();
 
   const formatDate = (dateString: string) => {
@@ -112,4 +112,4 @@ const ProjectUpdates = () => {
   );
 };
 
-export default ProjectUpdates;
+export default DatacenterConstructionUpdates;

@@ -1,0 +1,540 @@
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Mic, Play, Pause, Download, Trash2, Volume2, Loader2, Activity, Save } from "lucide-react";
+
+const API_BASE = "http://localhost:3001/api";
+
+interface VoiceClip {
+  id: string;
+  text: string;
+  voiceId: string;
+  voiceName: string;
+  timestamp: Date;
+  audioUrl?: string;
+  duration?: number;
+}
+
+interface Voice {
+  voice_id: string;
+  name: string;
+  category: string;
+  description?: string;
+  labels?: Record<string, string>;
+}
+
+const Voice = () => {
+  const { toast } = useToast();
+  const [text, setText] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState("21m00Tcm4TlvDq8ikWAM"); // Rachel
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [history, setHistory] = useState<VoiceClip[]>([]);
+  const [stability, setStability] = useState([0.5]);
+  const [similarityBoost, setSimilarityBoost] = useState([0.75]);
+  const [style, setStyle] = useState([0.0]);
+  const [audioData, setAudioData] = useState<number[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationRef = useRef<number>();
+
+  // Fetch available voices
+  useEffect(() => {
+    fetchVoices();
+    loadHistory();
+  }, []);
+
+  const fetchVoices = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/voice/voices`);
+      if (!response.ok) throw new Error("Failed to fetch voices");
+      const data = await response.json();
+      setVoices(data.voices || []);
+    } catch (error) {
+      console.error("Error fetching voices:", error);
+      // Set default voices if API fails
+      setVoices([
+        { voice_id: "21m00Tcm4TlvDq8ikWAM", name: "Rachel", category: "premade", description: "Calm, clear female voice" },
+        { voice_id: "EXAVITQu4vr4xnSDxMaL", name: "Bella", category: "premade", description: "Soft, gentle female voice" },
+        { voice_id: "ErXwobaYiN019PkySvjV", name: "Antoni", category: "premade", description: "Warm, friendly male voice" },
+        { voice_id: "MF3mGyEYCl7XYWbV9V6O", name: "Elli", category: "premade", description: "Young, energetic female voice" },
+        { voice_id: "TxGEqnHWrfWFTfGW9XjX", name: "Josh", category: "premade", description: "Deep, professional male voice" },
+        { voice_id: "VR6AewLTigWG4xSOukaG", name: "Arnold", category: "premade", description: "Strong, authoritative male voice" },
+        { voice_id: "pNInz6obpgDQGcFmaJgB", name: "Adam", category: "premade", description: "Natural, conversational male voice" },
+        { voice_id: "yoZ06aMxZJJ28mfd3POQ", name: "Sam", category: "premade", description: "Confident, clear male voice" },
+      ]);
+    }
+  };
+
+  const loadHistory = () => {
+    const saved = localStorage.getItem("voiceHistory");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setHistory(parsed.map((item: any) => ({ ...item, timestamp: new Date(item.timestamp) })));
+    }
+  };
+
+  const saveHistory = (newHistory: VoiceClip[]) => {
+    localStorage.setItem("voiceHistory", JSON.stringify(newHistory));
+    setHistory(newHistory);
+  };
+
+  const generateSpeech = async () => {
+    if (!text.trim()) {
+      toast({
+        title: "No text provided",
+        description: "Please enter some text to convert to speech",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`${API_BASE}/voice/text-to-speech`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          voiceId: selectedVoice,
+          stability: stability[0],
+          similarityBoost: similarityBoost[0],
+          style: style[0],
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate speech");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Create audio element and play
+      const audio = new Audio(audioUrl);
+      setCurrentAudio(audio);
+
+      // Setup audio visualization
+      setupAudioVisualization(audio);
+
+      // Add to history
+      const voiceName = voices.find(v => v.voice_id === selectedVoice)?.name || "Unknown";
+      const newClip: VoiceClip = {
+        id: Date.now().toString(),
+        text,
+        voiceId: selectedVoice,
+        voiceName,
+        timestamp: new Date(),
+        audioUrl,
+      };
+
+      const newHistory = [newClip, ...history].slice(0, 50); // Keep last 50
+      saveHistory(newHistory);
+
+      toast({
+        title: "Speech generated!",
+        description: `Using ${voiceName} voice`,
+      });
+
+      // Auto-play
+      playAudio(audio);
+    } catch (error: any) {
+      console.error("Error generating speech:", error);
+      toast({
+        title: "Generation failed",
+        description: error.message || "Could not generate speech. Check backend connection.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const setupAudioVisualization = (audio: HTMLAudioElement) => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+
+    const audioContext = audioContextRef.current;
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    analyserRef.current = analyser;
+
+    const source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    visualize();
+  };
+
+  const visualize = () => {
+    if (!analyserRef.current) return;
+
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const draw = () => {
+      animationRef.current = requestAnimationFrame(draw);
+      analyserRef.current?.getByteFrequencyData(dataArray);
+      setAudioData(Array.from(dataArray).slice(0, 64)); // Use first 64 bars
+    };
+
+    draw();
+  };
+
+  const playAudio = (audio: HTMLAudioElement) => {
+    audio.play();
+    setIsPlaying(true);
+    audio.onended = () => {
+      setIsPlaying(false);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        setAudioData([]);
+      }
+    };
+  };
+
+  const togglePlay = () => {
+    if (!currentAudio) return;
+
+    if (isPlaying) {
+      currentAudio.pause();
+      setIsPlaying(false);
+    } else {
+      playAudio(currentAudio);
+    }
+  };
+
+  const playHistoryClip = (clip: VoiceClip) => {
+    if (clip.audioUrl) {
+      const audio = new Audio(clip.audioUrl);
+      setCurrentAudio(audio);
+      setupAudioVisualization(audio);
+      playAudio(audio);
+    }
+  };
+
+  const downloadAudio = (clip: VoiceClip) => {
+    if (!clip.audioUrl) return;
+
+    const a = document.createElement("a");
+    a.href = clip.audioUrl;
+    a.download = `voice-${clip.id}.mp3`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    toast({
+      title: "Download started",
+      description: "Your audio file is being downloaded",
+    });
+  };
+
+  const deleteClip = (id: string) => {
+    const newHistory = history.filter(clip => clip.id !== id);
+    saveHistory(newHistory);
+    toast({
+      title: "Clip deleted",
+      description: "Voice clip removed from history",
+    });
+  };
+
+  const clearHistory = () => {
+    saveHistory([]);
+    toast({
+      title: "History cleared",
+      description: "All voice clips have been removed",
+    });
+  };
+
+  const selectedVoiceData = voices.find(v => v.voice_id === selectedVoice);
+
+  return (
+    <div className="min-h-screen bg-terminal-bg p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+              <Mic className="w-10 h-10 text-terminal-accent" />
+              Voice Studio
+            </h1>
+            <p className="text-terminal-text">AI-powered text-to-speech with ElevenLabs</p>
+          </div>
+          <div className="text-terminal-accent text-sm border border-terminal-accent rounded px-3 py-1">
+            {history.length} clips generated
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Generation Panel */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="bg-terminal-surface border-terminal-border p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Volume2 className="w-5 h-5 text-terminal-accent" />
+                Generate Speech
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-white mb-2">Text to speak</Label>
+                  <Textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Enter the text you want to convert to speech..."
+                    className="min-h-[200px] bg-terminal-bg border-terminal-border text-white resize-none"
+                    maxLength={5000}
+                  />
+                  <p className="text-terminal-text text-xs mt-1">{text.length} / 5000 characters</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-white mb-2">Voice</Label>
+                    <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                      <SelectTrigger className="bg-terminal-bg border-terminal-border text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-terminal-surface border-terminal-border">
+                        {voices.map((voice) => (
+                          <SelectItem key={voice.voice_id} value={voice.voice_id} className="text-white">
+                            {voice.name}
+                            {voice.description && ` - ${voice.description}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedVoiceData?.description && (
+                      <p className="text-terminal-text text-xs mt-1">{selectedVoiceData.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-terminal-border">
+                  <h3 className="text-white font-semibold text-sm">Voice Settings</h3>
+
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-white text-sm">Stability</Label>
+                      <span className="text-terminal-accent text-sm">{stability[0].toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={stability}
+                      onValueChange={setStability}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
+                    <p className="text-terminal-text text-xs mt-1">
+                      Lower = more variable and expressive, Higher = more stable and consistent
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-white text-sm">Similarity Boost</Label>
+                      <span className="text-terminal-accent text-sm">{similarityBoost[0].toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={similarityBoost}
+                      onValueChange={setSimilarityBoost}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
+                    <p className="text-terminal-text text-xs mt-1">
+                      Lower = more creative, Higher = more similar to original voice
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <Label className="text-white text-sm">Style</Label>
+                      <span className="text-terminal-accent text-sm">{style[0].toFixed(2)}</span>
+                    </div>
+                    <Slider
+                      value={style}
+                      onValueChange={setStyle}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
+                    <p className="text-terminal-text text-xs mt-1">
+                      Exaggeration of the speaking style
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={generateSpeech}
+                  disabled={isGenerating || !text.trim()}
+                  className="w-full bg-terminal-accent hover:bg-terminal-accent/90 text-terminal-bg font-bold"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-5 h-5 mr-2" />
+                      Generate Speech
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Audio Visualization */}
+            {audioData.length > 0 && (
+              <Card className="bg-terminal-surface border-terminal-border p-6">
+                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-terminal-accent" />
+                  Audio Visualization
+                </h3>
+                <div className="flex items-end justify-center h-32 gap-1">
+                  {audioData.map((value, i) => (
+                    <div
+                      key={i}
+                      className="bg-terminal-accent rounded-t transition-all duration-75"
+                      style={{
+                        width: `${100 / audioData.length}%`,
+                        height: `${Math.max(2, (value / 255) * 100)}%`,
+                        opacity: 0.7 + (value / 255) * 0.3,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex justify-center mt-4 gap-2">
+                  <Button
+                    onClick={togglePlay}
+                    variant="outline"
+                    className="border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg"
+                  >
+                    {isPlaying ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-2" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Play
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* History Panel */}
+          <div className="lg:col-span-1">
+            <Card className="bg-terminal-surface border-terminal-border p-6 h-[calc(100vh-200px)] flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Save className="w-5 h-5 text-terminal-accent" />
+                  History
+                </h2>
+                {history.length > 0 && (
+                  <Button
+                    onClick={clearHistory}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+                {history.length === 0 ? (
+                  <div className="text-center text-terminal-text py-8">
+                    <p>No voice clips yet</p>
+                    <p className="text-sm mt-2">Generate your first clip to get started!</p>
+                  </div>
+                ) : (
+                  history.map((clip) => (
+                    <div
+                      key={clip.id}
+                      className="bg-terminal-bg border border-terminal-border rounded-lg p-4 hover:border-terminal-accent transition-all group"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="text-terminal-accent text-sm font-semibold">{clip.voiceName}</p>
+                          <p className="text-terminal-text text-xs">
+                            {clip.timestamp.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-white text-sm mb-3 line-clamp-3">{clip.text}</p>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => playHistoryClip(clip)}
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 border-terminal-accent text-terminal-accent hover:bg-terminal-accent hover:text-terminal-bg"
+                        >
+                          <Play className="w-3 h-3 mr-1" />
+                          Play
+                        </Button>
+                        <Button
+                          onClick={() => downloadAudio(clip)}
+                          size="sm"
+                          variant="outline"
+                          className="border-terminal-border text-white hover:bg-terminal-border"
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          onClick={() => deleteClip(clip.id)}
+                          size="sm"
+                          variant="outline"
+                          className="border-red-400/30 text-red-400 hover:bg-red-400/10"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 255, 159, 0.05);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0, 255, 159, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 255, 159, 0.5);
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Voice;
