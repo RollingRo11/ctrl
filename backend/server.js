@@ -1,6 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
+
+// Ensure /tmp/uploads directory exists for serverless environments
+try {
+  const uploadsDir = '/tmp/uploads';
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (error) {
+  console.warn('Could not create uploads directory:', error.message);
+}
 
 const gpuPricingRouter = require('./routes/gpuPricing');
 const financialRouter = require('./routes/financial');

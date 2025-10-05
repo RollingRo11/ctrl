@@ -10,9 +10,9 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Configure multer for audio file uploads
+// Configure multer for audio file uploads (use /tmp for serverless)
 const upload = multer({
-  dest: 'uploads/',
+  dest: '/tmp/uploads/',
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
