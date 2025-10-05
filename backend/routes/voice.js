@@ -10,9 +10,9 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Configure multer for audio file uploads (use /tmp for serverless)
+// Configure multer for audio file uploads (use memory storage for serverless)
 const upload = multer({
-  dest: '/tmp/uploads/',
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
@@ -514,12 +514,12 @@ router.post('/speech-to-text', upload.single('audio'), async (req, res) => {
       });
     }
 
-    console.log('🎤 Transcribing audio file:', req.file.filename);
+    console.log('🎤 Transcribing audio file');
 
     // Use Google Cloud Speech-to-Text if API key is configured
     if (process.env.GOOGLE_CLOUD_API_KEY) {
-      const audioBuffer = fs.readFileSync(req.file.path);
-      const audioBase64 = audioBuffer.toString('base64');
+      // With memory storage, file is in buffer
+      const audioBase64 = req.file.buffer.toString('base64');
 
       const response = await fetch(
         `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_CLOUD_API_KEY}`,
@@ -547,17 +547,12 @@ router.post('/speech-to-text', upload.single('audio'), async (req, res) => {
       const data = await response.json();
       const transcription = data.results?.[0]?.alternatives?.[0]?.transcript || '';
 
-      // Clean up temp file
-      fs.unlinkSync(req.file.path);
-
       res.json({
         success: true,
         text: transcription,
       });
     } else {
       // Fallback: Return a message to use Web Speech API on client side
-      fs.unlinkSync(req.file.path);
-
       res.json({
         success: true,
         text: 'Speech-to-text requires Google Cloud API key. Please configure GOOGLE_CLOUD_API_KEY in .env',
@@ -566,11 +561,6 @@ router.post('/speech-to-text', upload.single('audio'), async (req, res) => {
     }
   } catch (error) {
     console.error('Speech-to-text error:', error);
-
-    // Clean up temp file if it exists
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
 
     res.status(500).json({
       success: false,
