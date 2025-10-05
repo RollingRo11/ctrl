@@ -101,8 +101,8 @@ module.exports = {
 					}
 				},
 				'scroll-text': {
-					'0%': { transform: 'translateX(100%)' },
-					'100%': { transform: 'translateX(-100%)' }
+					'0%': { transform: 'translateX(0%)' },
+					'100%': { transform: 'translateX(-50%)' }
 				},
 				'pulse-green': {
 					'0%, 100%': { boxShadow: '0 0 0 0 rgba(163, 230, 53, 0.7)' },
@@ -117,7 +117,7 @@ module.exports = {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'scroll-text': 'scroll-text 30s linear infinite',
+				'scroll-text': 'scroll-text 20s linear infinite',
 				'pulse-green': 'pulse-green 2s infinite',
 				'data-flow': 'data-flow 3s ease-in-out infinite'
 			}

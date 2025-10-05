@@ -1,21 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useInvestments } from '../contexts/InvestmentContext';
-import { chatWithGemini, ChatMessage } from '../lib/gemini';
-import { datacenterProjects } from '../data/datacenters';
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useInvestments } from "../contexts/InvestmentContext";
+import { chatWithGemini, ChatMessage } from "../lib/gemini";
+import { datacenterProjects } from "../data/datacenters";
 
 const InvestmentChatSidebar = () => {
   const { investments, totalInvested, totalValue, totalReturn, availableBalance } = useInvestments();
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
     {
-      role: 'assistant',
-      content: 'Hello! I\'m your AI investment advisor. I can help you analyze your GPU datacenter portfolio, answer questions about your investments, and provide insights. What would you like to know?',
+      role: "assistant",
+      content:
+        "Hello! I'm your AI investment advisor. I can help you analyze your GPU datacenter portfolio, answer questions about your investments, and provide insights. What would you like to know?",
     },
   ]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -29,19 +30,20 @@ const InvestmentChatSidebar = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
 
     try {
       // Check if API key is configured
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey || apiKey === 'demo-key') {
-        setMessages(prev => [
+      if (!apiKey || apiKey === "demo-key") {
+        setMessages((prev) => [
           ...prev,
           {
-            role: 'assistant',
-            content: '⚠️ Gemini API key not configured. Please:\n\n1. Get an API key from https://aistudio.google.com/app/apikey\n2. Create a .env file in the web directory\n3. Add: VITE_GEMINI_API_KEY=your_key_here\n4. Restart the dev server',
+            role: "assistant",
+            content:
+              "⚠️ Gemini API key not configured. Please:\n\n1. Get an API key from https://aistudio.google.com/app/apikey\n2. Create a .env file in the web directory\n3. Add: VITE_GEMINI_API_KEY=your_key_here\n4. Restart the dev server",
           },
         ]);
         setIsLoading(false);
@@ -49,8 +51,8 @@ const InvestmentChatSidebar = () => {
       }
 
       // Convert messages to Gemini format
-      const history: ChatMessage[] = messages.slice(1).map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
+      const history: ChatMessage[] = messages.slice(1).map((msg) => ({
+        role: msg.role === "user" ? "user" : "model",
         parts: [{ text: msg.content }],
       }));
 
@@ -64,17 +66,17 @@ const InvestmentChatSidebar = () => {
           totalReturn,
           availableBalance,
         },
-        datacenterProjects
+        datacenterProjects,
       );
 
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: response }]);
     } catch (error: any) {
-      console.error('Chat error:', error);
-      const errorMessage = error?.message || 'Unknown error';
-      setMessages(prev => [
+      console.error("Chat error:", error);
+      const errorMessage = error?.message || "Unknown error";
+      setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
+          role: "assistant",
           content: `❌ Error: ${errorMessage}\n\nPlease check:\n- API key is valid\n- You have internet connection\n- Browser console for details`,
         },
       ]);
@@ -84,7 +86,7 @@ const InvestmentChatSidebar = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -93,28 +95,20 @@ const InvestmentChatSidebar = () => {
   return (
     <Card className="bg-terminal-surface border-terminal-border h-full flex flex-col">
       <CardHeader className="border-b border-terminal-border">
-        <CardTitle className="text-terminal-accent flex items-center gap-2">
-          <span className="text-2xl">🤖</span>
-          AI Investment Advisor
-        </CardTitle>
-        <p className="text-xs text-terminal-muted mt-1">
-          Powered by Gemini 2.5 Pro
-        </p>
+        <CardTitle className="text-terminal-accent flex items-center gap-2">AI Investment Advisor</CardTitle>
+        <p className="text-xs text-terminal-muted mt-1">Powered by Gemini 2.5 Pro</p>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
         <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[85%] rounded-lg px-4 py-2 ${
-                    message.role === 'user'
-                      ? 'bg-terminal-accent text-terminal-bg'
-                      : 'bg-terminal-bg border border-terminal-border text-terminal-text'
+                    message.role === "user"
+                      ? "bg-terminal-accent text-terminal-bg"
+                      : "bg-terminal-bg border border-terminal-border text-terminal-text"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>

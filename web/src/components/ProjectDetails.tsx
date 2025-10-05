@@ -278,7 +278,7 @@ const ProjectDetails = ({ project, onClose }: ProjectDetailsProps) => {
             <div className="flex justify-center pt-4">
               <Button
                 onClick={() => setShowInvestForm(true)}
-                className="bg-terminal-accent text-terminal-bg hover:bg-terminal-accent/90 px-8 py-6 text-lg"
+                className="bg-terminal-accent text-terminal-bg hover:bg-terminal-accent/90 px-8 py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={project.status === 'Coming Soon'}
               >
                 {project.status === 'Coming Soon' ? 'Coming Soon' : 'Invest Now'}

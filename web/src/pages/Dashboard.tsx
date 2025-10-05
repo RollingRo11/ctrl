@@ -6,6 +6,7 @@ import { datacenterProjects } from '../data/datacenters';
 import InvestmentChatSidebar from '@/components/InvestmentChatSidebar';
 import LiveCashflow from '@/components/LiveCashflow';
 import ProjectUpdates from '@/components/ProjectUpdates';
+import { generateRevenueHistory } from '../data/revenueHistory';
 
 const Dashboard = () => {
   const { investments, totalInvested, totalValue, totalReturn, availableBalance } = useInvestments();
@@ -86,6 +87,95 @@ const Dashboard = () => {
 
   const performanceData = getPerformanceData();
 
+  // Individual investment performance comparison (Built datacenters only)
+  const getIndividualPerformanceData = () => {
+    // Only show built datacenters with actual revenue
+    const builtInvestments = investments.filter(inv => {
+      const project = datacenterProjects.find(p => p.id === inv.projectId);
+      return project?.buildStatus === 'Built';
+    });
+
+    if (builtInvestments.length === 0) return [];
+
+    const days = 30;
+    const data: any[] = [];
+    const today = new Date();
+
+    // Generate revenue history for each built datacenter
+    const revenueHistories = new Map<string, any[]>();
+    builtInvestments.forEach(inv => {
+      const project = datacenterProjects.find(p => p.id === inv.projectId);
+      if (!project) return;
+
+      // Estimate average daily revenue based on project size
+      const avgDailyRevenue = estimateAvgDailyRevenue(project);
+      const history = generateRevenueHistory(inv.projectId, avgDailyRevenue, 90);
+      revenueHistories.set(inv.id, history);
+    });
+
+    // Create data points for last 30 days
+    for (let i = days; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+
+      const dataPoint: any = {
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      };
+
+      builtInvestments.forEach(inv => {
+        const project = datacenterProjects.find(p => p.id === inv.projectId);
+        if (!project) return;
+
+        const history = revenueHistories.get(inv.id);
+        const dayData = history?.find(d => d.date === dateString);
+
+        if (dayData) {
+          // Calculate user's share of revenue based on ownership percentage
+          const ownershipPercentage = (inv.amount / project.fundingGoal) * 100;
+          const userRevenue = (dayData.revenue * ownershipPercentage) / 100;
+
+          // Add to initial investment to show total value
+          const totalValue = inv.amount + userRevenue * i; // Accumulated over days
+
+          const key = inv.projectName.split(' ').slice(0, 2).join(' ');
+          dataPoint[key] = totalValue;
+        }
+      });
+
+      data.push(dataPoint);
+    }
+
+    return data;
+  };
+
+  // Estimate daily revenue based on datacenter specs
+  const estimateAvgDailyRevenue = (project: any): number => {
+    // Base estimates per GPU type ($/day at 85% utilization)
+    const dailyRates: { [key: string]: number } = {
+      'NVIDIA H100': 2.49 * 24 * 0.85,
+      'NVIDIA H200': 3.20 * 24 * 0.85,
+      'NVIDIA A100': 1.29 * 24 * 0.85,
+      'NVIDIA L40S': 0.89 * 24 * 0.85,
+      'NVIDIA V100': 0.49 * 24 * 0.85,
+      'NVIDIA B100': 4.50 * 24 * 0.85,
+    };
+
+    let totalDaily = 0;
+    project.gpuAllocations.forEach((allocation: any) => {
+      const rate = dailyRates[allocation.type] || 20; // Default if not found
+      totalDaily += allocation.count * rate;
+    });
+
+    return totalDaily;
+  };
+
+  const individualPerformanceData = getIndividualPerformanceData();
+  const builtInvestmentsCount = investments.filter(inv => {
+    const project = datacenterProjects.find(p => p.id === inv.projectId);
+    return project?.buildStatus === 'Built';
+  }).length;
+
   // APY Comparison Data
   const apyComparisonData = investments.map(inv => ({
     name: inv.projectName.split(' ').slice(0, 2).join(' '), // Shorten names
@@ -121,6 +211,67 @@ const Dashboard = () => {
           <h1 className="text-3xl font-normal text-white">Investment Dashboard</h1>
           <p className="text-terminal-muted">Track your GPU datacenter portfolio</p>
         </div>
+
+      {/* Individual Investment Comparison Chart */}
+      {builtInvestmentsCount > 0 && individualPerformanceData.length > 0 && (
+        <Card className="bg-terminal-surface border-terminal-border">
+          <CardHeader>
+            <CardTitle className="text-terminal-accent">Live Revenue Comparison - Built Datacenters</CardTitle>
+            <p className="text-sm text-terminal-muted mt-1">
+              Real revenue performance from operational facilities ({builtInvestmentsCount} {builtInvestmentsCount === 1 ? 'datacenter' : 'datacenters'})
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart data={individualPerformanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                <XAxis
+                  dataKey="date"
+                  stroke="#6b7280"
+                  tick={{ fill: '#6b7280', fontSize: 11 }}
+                />
+                <YAxis
+                  stroke="#6b7280"
+                  tick={{ fill: '#6b7280', fontSize: 11 }}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip
+                  formatter={(value: number) => formatCurrencyFull(value)}
+                  contentStyle={{
+                    backgroundColor: '#111111',
+                    border: '1px solid #1f2937',
+                    borderRadius: '0',
+                    color: '#ffffff'
+                  }}
+                  labelStyle={{ color: '#ffffff' }}
+                  itemStyle={{ color: '#ffffff' }}
+                />
+                <Legend wrapperStyle={{ color: '#6b7280' }} />
+                {investments
+                  .filter(inv => {
+                    const project = datacenterProjects.find(p => p.id === inv.projectId);
+                    return project?.buildStatus === 'Built';
+                  })
+                  .map((inv, index) => {
+                    const key = inv.projectName.split(' ').slice(0, 2).join(' ');
+                    return (
+                      <Line
+                        key={inv.id}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={COLORS[index % COLORS.length]}
+                        strokeWidth={2}
+                        name={key}
+                        dot={false}
+                        connectNulls
+                      />
+                    );
+                  })}
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Portfolio Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -330,61 +481,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Portfolio Performance Over Time */}
-      {investments.length > 0 && performanceData.length > 0 && (
-        <Card className="bg-terminal-surface border-terminal-border">
-          <CardHeader>
-            <CardTitle className="text-terminal-accent">Portfolio Performance (Last 30 Days)</CardTitle>
-            <p className="text-sm text-terminal-muted mt-1">Total portfolio value over time</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={performanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 11 }}
-                />
-                <YAxis
-                  stroke="#6b7280"
-                  tick={{ fill: '#6b7280', fontSize: 11 }}
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <Tooltip
-                  formatter={(value: number) => formatCurrencyFull(value)}
-                  contentStyle={{
-                    backgroundColor: '#111111',
-                    border: '1px solid #1f2937',
-                    borderRadius: '0',
-                    color: '#ffffff'
-                  }}
-                  labelStyle={{ color: '#ffffff' }}
-                  itemStyle={{ color: '#ffffff' }}
-                />
-                <Legend wrapperStyle={{ color: '#6b7280' }} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#a3e635"
-                  strokeWidth={2}
-                  name="Portfolio Value"
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="invested"
-                  stroke="#6b7280"
-                  strokeWidth={1}
-                  strokeDasharray="5 5"
-                  name="Total Invested"
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Investments List */}
       {investments.length === 0 ? (

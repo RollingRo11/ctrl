@@ -41,14 +41,14 @@ const Marketplace = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="space-y-4">
+      <div className="flex items-start justify-between gap-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-normal text-white">GPU Datacenter Marketplace</h1>
           <p className="text-terminal-muted">Invest in the future of compute infrastructure</p>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="space-y-3">
+        {/* Filter Buttons - Right Side */}
+        <div className="space-y-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-sm text-terminal-muted">Project Type:</span>
             <div className="flex gap-2">
@@ -57,6 +57,7 @@ const Marketplace = () => {
                   key={filterType}
                   onClick={() => setProjectTypeFilter(filterType)}
                   variant={projectTypeFilter === filterType ? 'default' : 'outline'}
+                  size="sm"
                   className={
                     projectTypeFilter === filterType
                       ? 'bg-terminal-accent text-terminal-bg hover:bg-terminal-accent/90'
@@ -85,6 +86,7 @@ const Marketplace = () => {
                   key={filterType}
                   onClick={() => setBuildStatusFilter(filterType)}
                   variant={buildStatusFilter === filterType ? 'default' : 'outline'}
+                  size="sm"
                   className={
                     buildStatusFilter === filterType
                       ? 'bg-terminal-accent text-terminal-bg hover:bg-terminal-accent/90'

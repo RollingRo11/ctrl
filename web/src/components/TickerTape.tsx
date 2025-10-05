@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getGPUPricing, getGPUPricingSync, GPUPricing } from '../lib/gpuPricing';
 
 const TickerTape = () => {
   const [gpuPrices, setGpuPrices] = useState<GPUPricing[]>(getGPUPricingSync());
+  const tickerRef = useRef<HTMLDivElement>(null);
 
   // Fetch real prices on mount and every 60 seconds
   useEffect(() => {
@@ -18,17 +19,17 @@ const TickerTape = () => {
     return () => clearInterval(priceInterval);
   }, []);
 
-  // Create continuous ticker message with all GPU prices
-  const createTickerMessage = () => {
-    return gpuPrices.map(gpu => {
-      const demandIndicator = gpu.demand === 'High' ? '🔥' : gpu.demand === 'Medium' ? '📊' : '📉';
-      return `${gpu.gpuType}: $${gpu.pricePerHour.toFixed(2)}/hr ${demandIndicator}`;
-    }).join('  •  ');
+  // Create ticker items
+  const renderTickerItems = (keyPrefix: string) => {
+    return gpuPrices.map((gpu, index) => (
+      <span key={`${keyPrefix}-${gpu.gpuType}-${index}`} className="inline-flex items-center gap-4">
+        <span className="text-terminal-accent">
+          {gpu.gpuType}: ${gpu.pricePerHour.toFixed(2)}/hr
+        </span>
+        <span className="text-gray-600">|</span>
+      </span>
+    ));
   };
-
-  const tickerMessage = createTickerMessage();
-  // Duplicate the message to create seamless loop
-  const continuousMessage = `${tickerMessage}  •  ${tickerMessage}  •  ${tickerMessage}`;
 
   return (
     <div className="bg-terminal-bg border-b border-terminal-border overflow-hidden h-10">
@@ -37,8 +38,13 @@ const TickerTape = () => {
           LIVE
         </div>
         <div className="flex-1 relative overflow-hidden">
-          <div className="animate-scroll-text whitespace-nowrap text-terminal-accent text-sm font-mono">
-            {continuousMessage}
+          <div
+            ref={tickerRef}
+            className="animate-scroll-text whitespace-nowrap text-sm font-mono flex items-center gap-4"
+            style={{ willChange: 'transform' }}
+          >
+            {renderTickerItems('first')}
+            {renderTickerItems('second')}
           </div>
         </div>
       </div>
